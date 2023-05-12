@@ -51,16 +51,16 @@ export const calculateAQI = (pm25: number): AQIResult => {
 
   const category =
     aqi <= 50
-      ? "Good"
+      ? "Bueno"
       : aqi <= 100
-      ? "Moderate"
+      ? "Moderado"
       : aqi <= 150
-      ? "Unhealthy for Sensitive Groups"
+      ? "Dañino para grupos sensibles"
       : aqi <= 200
-      ? "Unhealthy"
+      ? "Dañino para la salud"
       : aqi <= 300
-      ? "Very Unhealthy"
-      : "Hazardous";
+      ? "Muy dañino para la salud"
+      : "Peligroso";
 
   const color =
     aqi <= 50

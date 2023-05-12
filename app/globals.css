@@ -25,3 +25,11 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+.mapboxgl-popup-tip {
+  border-top-color: #E2E8F0 !important;
+}
+
+.mapboxgl-popup-content {
+  background-color: #E2E8F0 !important;
+}
