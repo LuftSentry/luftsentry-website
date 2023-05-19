@@ -22,9 +22,10 @@ export const initializeMap = () => {
 };
 
 type AQIResult = {
-  aqi: number,
-  category: string,
-  color: string,
+  aqi: number;
+  category: string;
+  color: string;
+  description: string;
 };
 
 export const calculateAQI = (pm25: number): AQIResult => {
@@ -38,42 +39,60 @@ export const calculateAQI = (pm25: number): AQIResult => {
     { bpLow: 350.5, bpHigh: 500.4, iLow: 401, iHigh: 500 },
   ];
 
-  const breakpoint = breakpoints.find((bp) => pm25 >= bp.bpLow && pm25 <= bp.bpHigh);
+  const breakpoint = breakpoints.find(
+    (bp) => pm25 >= bp.bpLow && pm25 <= bp.bpHigh
+  );
 
   if (!breakpoint) {
     throw new Error("PM2.5 value out of range");
   }
 
   const aqi =
-    ((breakpoint.iHigh - breakpoint.iLow) / (breakpoint.bpHigh - breakpoint.bpLow)) *
+    ((breakpoint.iHigh - breakpoint.iLow) /
+      (breakpoint.bpHigh - breakpoint.bpLow)) *
       (pm25 - breakpoint.bpLow) +
     breakpoint.iLow;
 
-  const category =
+  const response =
     aqi <= 50
-      ? "Bueno"
+      ? {
+          category: "Bueno",
+          color: "#abd162",
+          description: "Se puede realizar cualquier actividad al aire libre.",
+        }
       : aqi <= 100
-      ? "Moderado"
+      ? {
+          category: "Moderado",
+          color: "#f7d460",
+          description:
+            "Los grupos sensibles deben considerar limitar los esfuerzos prolongados al aire libre.",
+        }
       : aqi <= 150
-      ? "Dañino para grupos sensibles"
+      ? {
+          category: "Dañino para grupos sensibles",
+          color: "#fc9956",
+          description:
+            "Los grupos sensibles deben limitar los esfuerzos prolongados al aire libre.",
+        }
       : aqi <= 200
-      ? "Dañino para la salud"
+      ? {
+          category: "Dañino para la salud",
+          color: "#f6676b",
+          description:
+            "Los grupos sensibles deben evitar los esfuerzos prolongados al aire libre. La población en general deben limitar los esfuerzos prolongados al aire libre.",
+        }
       : aqi <= 300
-      ? "Muy dañino para la salud"
-      : "Peligroso";
+      ? {
+          category: "Muy dañino para la salud",
+          color: "#a37db8",
+          description: "",
+        }
+      : {
+          category: "Peligroso",
+          color: "#a07684",
+          description:
+            "La población en general deben suspender los esfuerzos prolongados al aire libre.",
+        };
 
-  const color =
-    aqi <= 50
-      ? "#abd162"
-      : aqi <= 100
-      ? "#f7d460"
-      : aqi <= 150
-      ? "#fc9956"
-      : aqi <= 200
-      ? "#f6676b"
-      : aqi <= 300
-      ? "#a37db8"
-      : "#a07684";
-
-  return { aqi: Math.round(aqi), category, color };
+  return { aqi: Math.round(aqi), ...response };
 };

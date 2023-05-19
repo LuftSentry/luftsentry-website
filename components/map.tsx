@@ -3,25 +3,37 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { ReactElement, createRef, useEffect } from "react";
 import { calculateAQI, initializeMap } from "./utils";
 import { useMapStore } from "./store";
-import axios from "axios";
 import { renderToString } from "react-dom/server";
 import { Map, Marker, Popup } from "mapbox-gl";
+import { getLastResults } from "./services";
 
 interface IData {
-  coordinates: [number, number];
-  value: number;
+  location: [number, number];
+  data: {
+    pm25: number;
+    quality: number;
+    time: number;
+  };
   name: string;
 }
 
 const localData: Array<IData> = [
   {
-    coordinates: [-75.59, 6.25],
-    value: 12.1,
+    location: [-75.59, 6.25],
+    data: {
+      pm25: 12.1,
+      time: 1684504774923,
+      quality: 0.56,
+    },
     name: "Esp-32 Andres",
   },
   {
-    coordinates: [-75.57, 6.2],
-    value: 36,
+    location: [-75.57, 6.2],
+    data: {
+      pm25: 36,
+      time: 1684504774923,
+      quality: 0.78,
+    },
     name: "Esp-32 David",
   },
 ];
@@ -31,17 +43,39 @@ const MapComponent = () => {
   const map = useMapStore((state) => state.map);
   const onCreateMarker = (data: IData) => {
     if (!map) return;
-    const aqi = calculateAQI(data.value);
+    const aqi = calculateAQI(data.data.pm25);
+    const lastUpdate = new Date(data.data.time);
+    lastUpdate.setHours(+1, 15);
+    const formatHour = (date: Date): string =>
+      date
+        .toLocaleString(undefined, {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+        .replace(",", "");
+    console.log(lastUpdate.toLocaleDateString(undefined, {}));
     createCustomMarker(
       {
-        coordinates: data.coordinates,
-        text: Math.round(data.value).toString(),
+        coordinates: data.location,
+        text: Math.round(data.data.pm25).toString(),
         color: aqi.color,
         description: (
-          <div className="bg-slate-200 text-gray-950">
-            <h2 className="text-lg">Dispositivo {data.name}</h2>
+          <div className="bg-slate-200 text-gray-950 text-sm">
+            <h2 className="text-lg font-semibold mb-2">{data.name}</h2>
             <p>
-              AQI es de {aqi.aqi} siendo {aqi.category}
+              <span className="font-semibold">Porcentaje de calidad: </span>
+              {(data.data.quality * 100).toFixed(1)}%
+            </p>
+            <p>
+              <span className="font-semibold">AQI:</span> {aqi.aqi} {aqi.category}
+            </p>
+            <p className="font-semibold">Recomendación:</p>
+            <p>{aqi.description}</p>
+            <p className="mt-2 text-xs">
+              {formatHour(lastUpdate)}
             </p>
           </div>
         ),
@@ -52,9 +86,7 @@ const MapComponent = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        /*  const response = await axios.get(
-          "https://f8f1-181-58-39-221.ngrok.io/results"
-        ); */
+        //const response = await getLastResults();
         localData.forEach((value: IData) => {
           onCreateMarker(value);
         });
@@ -143,17 +175,17 @@ const createCustomMarker = (
   markerElement.addEventListener("mouseenter", () => {
     const popup = new Popup({
       offset: 25,
-      closeOnClick: false,
+      closeOnClick: true,
       className: "custom-popup",
-      closeButton: false,
+      closeButton: true,
     })
       .setLngLat(coordinates)
       .setHTML(renderToString(description))
       .addTo(map);
 
-    markerElement.addEventListener("mouseleave", () => {
+    /* markerElement.addEventListener("mouseleave", () => {
       popup.remove();
-    });
+    }); */
   });
 };
 
