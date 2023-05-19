@@ -8,16 +8,6 @@ interface IUser {
   devices: number;
 }
 
-const userDevices = [
-  {
-    id: 1,
-    name: "ESP_32_01_andres",
-    type: "esp32",
-    location: [-75.25, 6.2],
-    version: "0.0.1",
-  },
-];
-
 export const UserDevices = () => {
   const [pickedUser, setPickedUser] = useState<number>(0);
   const [pickedDevice, setPickedDevice] = useState<number>(0);

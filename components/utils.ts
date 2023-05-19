@@ -3,7 +3,10 @@ import { useMapStore } from "./store";
 
 export const initializeMap = () => {
   const mapContainerRef = useMapStore.getState().mapContainerRef;
-  if (!mapContainerRef?.current) return () => {};
+  if (!mapContainerRef?.current)
+    return () => {
+      return null;
+    };
 
   mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_GL_ACCESS_TOKEN ?? "";
   const map = new Map({

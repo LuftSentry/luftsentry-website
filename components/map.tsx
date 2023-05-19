@@ -70,13 +70,12 @@ const MapComponent = () => {
               {(data.data.quality * 100).toFixed(1)}%
             </p>
             <p>
-              <span className="font-semibold">AQI:</span> {aqi.aqi} {aqi.category}
+              <span className="font-semibold">AQI:</span> {aqi.aqi}{" "}
+              {aqi.category}
             </p>
             <p className="font-semibold">Recomendación:</p>
             <p>{aqi.description}</p>
-            <p className="mt-2 text-xs">
-              {formatHour(lastUpdate)}
-            </p>
+            <p className="mt-2 text-xs">{formatHour(lastUpdate)}</p>
           </div>
         ),
       },
@@ -86,7 +85,11 @@ const MapComponent = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        //const response = await getLastResults();
+        await getLastResults();
+      } catch (error) {
+        console.error(error);
+      }
+      try {
         localData.forEach((value: IData) => {
           onCreateMarker(value);
         });
