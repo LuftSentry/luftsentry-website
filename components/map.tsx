@@ -1,6 +1,6 @@
 "use client";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { ReactElement, createRef, useEffect } from "react";
+import { ReactElement, createRef, useEffect, useState } from "react";
 import { calculateAQI, initializeMap } from "./utils";
 import { useMapStore } from "./store";
 import { renderToString } from "react-dom/server";
@@ -8,7 +8,10 @@ import { Map, Marker, Popup } from "mapbox-gl";
 import { getLastResults } from "./services";
 
 interface IData {
-  location: [number, number];
+  location: {
+    x: number;
+    y: number;
+  };
   data: {
     pm25: number;
     quality: number;
@@ -17,30 +20,10 @@ interface IData {
   name: string;
 }
 
-const localData: Array<IData> = [
-  {
-    location: [-75.59, 6.25],
-    data: {
-      pm25: 12.1,
-      time: 1684504774923,
-      quality: 0.56,
-    },
-    name: "Esp-32 Andres",
-  },
-  {
-    location: [-75.57, 6.2],
-    data: {
-      pm25: 36,
-      time: 1684504774923,
-      quality: 0.78,
-    },
-    name: "Esp-32 David",
-  },
-];
-
 const MapComponent = () => {
   const mapContainerRef = createRef<HTMLDivElement>();
   const map = useMapStore((state) => state.map);
+  const [responseData, setResponseData] = useState<Array<any>>([]);
   const onCreateMarker = (data: IData) => {
     if (!map) return;
     const aqi = calculateAQI(data.data.pm25);
@@ -56,10 +39,9 @@ const MapComponent = () => {
           minute: "2-digit",
         })
         .replace(",", "");
-    console.log(lastUpdate.toLocaleDateString(undefined, {}));
     createCustomMarker(
       {
-        coordinates: data.location,
+        coordinates: [data.location.x, data.location.y],
         text: Math.round(data.data.pm25).toString(),
         color: aqi.color,
         description: (
@@ -85,16 +67,9 @@ const MapComponent = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        await getLastResults();
+        setResponseData(await getLastResults());
       } catch (error) {
         console.error(error);
-      }
-      try {
-        localData.forEach((value: IData) => {
-          onCreateMarker(value);
-        });
-      } catch (error) {
-        console.log(error);
       }
     };
 
@@ -106,6 +81,16 @@ const MapComponent = () => {
     const cleanup = initializeMap();
     return cleanup;
   }, []);
+
+  useEffect(() => {
+    try {
+      responseData.forEach((value: IData) => {
+        onCreateMarker(value);
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }, [responseData, setResponseData]);
 
   return (
     <>
@@ -180,15 +165,11 @@ const createCustomMarker = (
       offset: 25,
       closeOnClick: true,
       className: "custom-popup",
-      closeButton: true,
+      closeButton: false,
     })
       .setLngLat(coordinates)
       .setHTML(renderToString(description))
       .addTo(map);
-
-    /* markerElement.addEventListener("mouseleave", () => {
-      popup.remove();
-    }); */
   });
 };
 

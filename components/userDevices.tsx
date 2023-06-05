@@ -78,11 +78,11 @@ export const UserDevices = () => {
         ))}
       </ul>
       {pickedDevice != 0 && (
-        <iframe
+        {/* <iframe
           className="w-full h-96 border-none"
           src="https://lookerstudio.google.com/embed/reporting/fa3c0f69-ff3f-4955-8863-fb21b1390659/page/p_lfzqyhh2vc"
           allowFullScreen
-        />
+        /> */}
       )}
     </>
   );
