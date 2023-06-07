@@ -5,7 +5,6 @@ import { calculateAQI, initializeMap } from "./utils";
 import { useMapStore } from "./store";
 import { renderToString } from "react-dom/server";
 import { Map, Marker, Popup } from "mapbox-gl";
-import { getLastResults } from "./services";
 
 interface IData {
   location: {
@@ -20,10 +19,9 @@ interface IData {
   name: string;
 }
 
-const MapComponent = () => {
+const MapComponent = ({ responseData }: { responseData: Array<any> }) => {
   const mapContainerRef = createRef<HTMLDivElement>();
   const map = useMapStore((state) => state.map);
-  const [responseData, setResponseData] = useState<Array<any>>([]);
   const onCreateMarker = (data: IData) => {
     if (!map) return;
     const aqi = calculateAQI(data.data.pm25);
@@ -41,7 +39,7 @@ const MapComponent = () => {
         .replace(",", "");
     createCustomMarker(
       {
-        coordinates: [data.location.x, data.location.y],
+        coordinates: [data.location.y, data.location.x],
         text: Math.round(data.data.pm25).toString(),
         color: aqi.color,
         description: (
@@ -67,30 +65,20 @@ const MapComponent = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setResponseData(await getLastResults());
+        responseData.forEach((value: IData) => {
+          onCreateMarker(value);
+        });
       } catch (error) {
         console.error(error);
       }
     };
-
     fetchData();
   }, [map]);
 
   useEffect(() => {
     useMapStore.getState().setMapContainerRef(mapContainerRef);
-    const cleanup = initializeMap();
-    return cleanup;
+    return initializeMap();
   }, []);
-
-  useEffect(() => {
-    try {
-      responseData.forEach((value: IData) => {
-        onCreateMarker(value);
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  }, [responseData, setResponseData]);
 
   return (
     <>
