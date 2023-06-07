@@ -1,10 +1,11 @@
 "use client";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { ReactElement, createRef, useEffect, useState } from "react";
+import { ReactElement, createRef, useEffect, useMemo, useState } from "react";
 import { calculateAQI, initializeMap } from "./utils";
 import { useMapStore } from "./store";
 import { renderToString } from "react-dom/server";
 import { Map, Marker, Popup } from "mapbox-gl";
+import { getLastResults } from "./services";
 
 interface IData {
   location: {
@@ -19,7 +20,7 @@ interface IData {
   name: string;
 }
 
-const MapComponent = ({ responseData }: { responseData: Array<any> }) => {
+const MapComponent = () => {
   const mapContainerRef = createRef<HTMLDivElement>();
   const map = useMapStore((state) => state.map);
   const onCreateMarker = (data: IData) => {
@@ -62,9 +63,10 @@ const MapComponent = ({ responseData }: { responseData: Array<any> }) => {
       map
     );
   };
-  useEffect(() => {
+  useMemo(() => {
     const fetchData = async () => {
       try {
+        const responseData = await getLastResults();
         responseData.forEach((value: IData) => {
           onCreateMarker(value);
         });
@@ -72,7 +74,7 @@ const MapComponent = ({ responseData }: { responseData: Array<any> }) => {
         console.error(error);
       }
     };
-    fetchData();
+    if (map) fetchData();
   }, [map]);
 
   useEffect(() => {
